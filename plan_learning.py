@@ -1,30 +1,33 @@
+import domain as d
 
 if __name__ == '__main__':
+    f = open('training.txt')
+
+    examples = []
     
-    predicate = 'on(a,b)'
+    line = f.readline().replace('\n','')
+    while line:
+        triple = line.split('|')
+        example = (triple[0], triple[1], triple[2])
+        examples.append(example)
+        line = f.readline().replace('\n','')
 
-    instantiated = InstantiatedPredicate.parse(predicate)
+    f.close()
 
-    print str(instantiated)
-                
-## example = ([on(a, b), on(b, c), on(c, table)], pick(a), [holding(a), on(b, c), on(c,table)])
+#    print examples
 
-## example_precondition = example[0]
-## example_action = example[1]
-## example_effects = example[2]
+    domain_definition = d.Domain()
 
-## actions = []
-## predicates = []
+    for e in examples:
+        preconditions = e[0].replace('[', '').replace(']', '').split(',')
+        operators = e[1].replace('[', '').replace(']', '').split(',')
+        effects = e[2].replace('[', '').replace(']', '').split(',')
 
-## for example in example_precondition:
-##     # Create predicates
+        for p in preconditions:
+            domain_definition.add_predicate(p)
 
-## action = Action()
-
-## for precondition in example_precondition:
-##     action.add_precondition(precondition)
-
-## for effect in example_effects:
-##     action.add_positive_effects(effect)
-
-## domain_str = '(define (domain learned)'
+        for e in effects:
+            domain_definition.add_predicate(e)
+            
+        for o in operators:
+            domain_definition.add_operator(o, preconditions, effects)

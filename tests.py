@@ -4,22 +4,22 @@ import domain
 class PredicateClassTest(unittest.TestCase):
 
     def test_predicate_creation(self):
-        predicate = domain.InstantiatedPredicate('on', 2)
+        predicate = domain.Predicate('on', 2)
         self.assertEqual(str(predicate), '(on ?x0 ?x1)')
     
     def test_predicate_parsing_double(self):
         predicate_str = 'on(a,b)'
-        predicate = domain.InstantiatedPredicate.parse(predicate_str)
+        predicate = domain.Predicate.parse(predicate_str)
         self.assertEqual(str(predicate),'(on ?x0 ?x1)')
 
     def test_predicate_parsing_single(self):
         predicate_str = 'location(a)'
-        predicate = domain.InstantiatedPredicate.parse(predicate_str)
+        predicate = domain.Predicate.parse(predicate_str)
         self.assertEqual(str(predicate),'(location ?x0)')
 
     def test_predicate_parsing_triple(self):
         predicate_str = 'connected(a,b,x)'
-        predicate = domain.InstantiatedPredicate.parse(predicate_str)
+        predicate = domain.Predicate.parse(predicate_str)
         self.assertEqual(str(predicate),'(connected ?x0 ?x1 ?x2)')
 
 
@@ -62,7 +62,7 @@ class DomainClassTest(unittest.TestCase):
         action.add_negative_effect('(free ?to)')
         domain_specification.actions.append(action)
 
-        print str(domain_specification)
+        #print str(domain_specification)
         
         self.assertEqual(str(domain_specification), """(define (domain learned)
 	(:predicates

@@ -1,0 +1,2 @@
+[on(a,b)]|[pick(a)]|[free(b)]
+[on(b,a)]|[pick(b)]|[free(a)]

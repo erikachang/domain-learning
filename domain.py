@@ -21,6 +21,29 @@ class Domain():
 
         return ''.join(string)
 
+    def add_predicate(self, predicate_str):
+        self.predicates.append(InstantiatedPredicate.parse(predicate_str)
+
+    def add_operator(self, operator_str, preconditions, effects):
+        tokenized_str = operator_str.split('(')
+        operator = tokenized_str[0]
+
+        action = next(x for x in self.actions if x.operator is operator, None)
+
+        if action is None:
+            args = tokenized_str[1].replace(')','').split(',')
+            n_args = len(args)
+
+            action = Action(operator, n_args)
+
+            for p in preconditions:
+                
+                
+            
+            self.actions.append(action)
+        else:
+        
+
 
 class Predicate():
     def __init__(self, predicate, arity):
@@ -41,28 +64,39 @@ class Predicate():
         string += ')'
         return ''.join(string)
 
+    def print_grounded(self):
+        string = ['(', self.predicate]
+        for t in self.terms:
+            string += ([' ', t[1]])
+        string += ')'
+        return ''.join(string)
 
-class InstantiatedPredicate(Predicate):
-    
+    @classmethod
+    def parse_grounded(cls, predicate_str):
+        tokenized_str = predicate_str.split('(')
+        predicate = tokenized_str[0]
+        args = tokenized_str[1].replace(')','').split(',')
+        arity = len(args)
+        instantiated_predicate = Predicate(predicate, arity)
+        for i in range(0, arity):
+            # Add this to a predicate
+            instantiated_predicate.terms[i][1] = args[i] 
+        return instantiated_predicate
+
     @classmethod
     def parse(cls, predicate_str):
         tokenized_str = predicate_str.split('(')
         predicate = tokenized_str[0]
         args = tokenized_str[1].replace(')','').split(',')
         arity = len(args)
-
         instantiated_predicate = Predicate(predicate, arity)
-        
-        for i in range(0, arity):
-            # Add this to a predicate
-            instantiated_predicate.terms[i][1] = args[i] 
-
         return instantiated_predicate
 
     
 class Action():
-    def __init__(self, operator):
+    def __init__(self, operator, n_args):
         self.operator = operator
+        self.n_args = n_args
         self.parameters = [] # TODO: Parse parameters
         self.preconditions = []
         self.positive_effects = []
