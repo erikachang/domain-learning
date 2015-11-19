@@ -1,4 +1,5 @@
-import domain as d
+import pdb
+import representations as r
 
 if __name__ == '__main__':
     f = open('training.txt')
@@ -16,18 +17,15 @@ if __name__ == '__main__':
 
 #    print examples
 
-    domain_definition = d.Domain()
+    domain = r.Domain('blocks-world')
 
     for e in examples:
-        preconditions = e[0].replace('[', '').replace(']', '').split(',')
-        operators = e[1].replace('[', '').replace(']', '').split(',')
-        effects = e[2].replace('[', '').replace(']', '').split(',')
+        preconditions = e[0].replace('[', '').replace(']', '').split(', ')
+        operators = e[1].replace('[', '').replace(']', '').split(', ')
+        effects = e[2].replace('[', '').replace(']', '').split(', ')
 
-        for p in preconditions:
-            domain_definition.add_predicate(p)
+        domain.add_all_predicates(preconditions)
+        domain.add_all_predicates(effects)
+        domain.add_actions(operators, preconditions, effects)
 
-        for e in effects:
-            domain_definition.add_predicate(e)
-            
-        for o in operators:
-            domain_definition.add_operator(o, preconditions, effects)
+    print str(domain)
