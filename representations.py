@@ -32,6 +32,8 @@ class Domain():
                             None)
             if existent is None:
                 self.actions.append(action)
+            else:
+                existent.merge(action)
 
     def __str__(self):
         """ Print the domain definition in PDDL
@@ -82,9 +84,10 @@ class Predicate():
 
     @classmethod
     def parse_grounded(cls, predicate_str):
-        tokenized_str = predicate_str.split('(')
+        trimmed_str = predicate_str.replace('(', '').replace(')', '')
+        tokenized_str = trimmed_str.split(' ')
         predicate = tokenized_str[0]
-        args = tokenized_str[1].replace(')', '').split(',')
+        args = tokenized_str[1:]
         arity = len(args)
         instantiated_predicate = Predicate(predicate, arity)
         for i in range(0, arity):
@@ -94,9 +97,10 @@ class Predicate():
 
     @classmethod
     def parse(cls, predicate_str):
-        tokenized_str = predicate_str.split('(')
+        trimmed_str = predicate_str.replace('(', '').replace(')', '')
+        tokenized_str = trimmed_str.split(' ')
         predicate = tokenized_str[0]
-        args = tokenized_str[1].replace(')', '').split(',')
+        args = tokenized_str[1:]
         arity = len(args)
         instantiated_predicate = Predicate(predicate, arity)
         return instantiated_predicate
@@ -120,15 +124,24 @@ class Action():
         self.effects_positive.append(effect.print_grounded())
 
     def add_negative_effect(self, effect):
-        effect_negated = ['(not', ' ', effect.print_grounded(), ')']
-        self.effects_negative.append(effect_negated)
+        self.effects_negative.append(effect.print_grounded())
+
+    def merge(self, action):
+        """ Updates current action with new information
+        """
+        self.preconditions = list(set(self.preconditions)
+                                  | set(action.preconditions))
+        self.effects_positive = list(set(self.effects_positive)
+                                     | set(action.effects_positive))
+        self.effects_negative = list(set(self.effects_negative)
+                                     | set(action.effects_negative))
 
     @classmethod
     def parse(cls, action_name, preconditions, effects):
         parameter_mapping = []
         action_str_tokenized = action_name.split('(')
         action_name = action_str_tokenized[0]
-        args = action_str_tokenized[1].replace(')', '').split(',')
+        args = action_str_tokenized[1].replace(')', '').split(' ')
         arity = len(args)
         action = Action(action_name, arity)
 
@@ -146,11 +159,12 @@ class Action():
                         predicate.terms[i][1] = parameter_mapping[j][1]
                         has_correspondence = True
                         break
-                if not has_correspondence:
-                    variable_index = len(parameter_mapping)
-                    variable = '?x' + str(variable_index)
-                    parameter_mapping.append((predicate.terms[i][1], variable))
-                    predicate.terms[i][1] = variable
+                # if not has_correspondence:
+                #     variable_index = len(parameter_mapping)
+                #     variable = '?x' + str(variable_index)
+                #     parameter_mapping.append((predicate.terms[i][1], variable))
+                #     predicate.terms[i][1] = variable
+            if has_correspondence:
                 action.add_precondition(predicate)
 
         state_intersection = set(preconditions) & set(effects)
@@ -168,11 +182,12 @@ class Action():
                         predicate.terms[i][1] = parameter_mapping[j][1]
                         has_correspondence = True
                         break
-                if not has_correspondence:
-                    i = len(parameter_mapping)
-                    variable = '?x' + str(i)
-                    parameter_mapping.append((predicate.terms[i][1], variable))
-                    predicate.terms[i][1] = variable
+                # if not has_correspondence:
+                #     i = len(parameter_mapping)
+                #     variable = '?x' + str(i)
+                #     parameter_mapping.append((predicate.terms[i][1], variable))
+                #     predicate.terms[i][1] = variable
+            if has_correspondence:
                 action.add_positive_effect(predicate)
 
         for ep in effects_negative:
@@ -186,14 +201,14 @@ class Action():
                         predicate.terms[i][1] = parameter_mapping[j][1]
                         has_correspondence = True
                         break
-                if not has_correspondence:
-                    i = len(parameter_mapping)
-                    variable = '?x' + str(i)
-                    parameter_mapping.append((predicate.terms[i][1], variable))
-                    predicate.terms[i][1] = variable
+                # if not has_correspondence:
+                #     i = len(parameter_mapping)
+                #     variable = '?x' + str(i)
+                #     parameter_mapping.append((predicate.terms[i][1], variable))
+                #     predicate.terms[i][1] = variable
+            if has_correspondence:
                 action.add_negative_effect(predicate)
 
-        print parameter_mapping
         return action
 
     def __str__(self):
@@ -219,7 +234,8 @@ class Action():
             string += ' '
 
         for e in self.effects_negative:
-            string += (e)
+            effect_negated = ['(not', ' ', e, ')']
+            string += (effect_negated)
             string += ' '
 
         string += [')', ')']
