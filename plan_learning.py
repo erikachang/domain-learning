@@ -1,8 +1,11 @@
 import pdb
 import representations as r
+import sys
+
 
 if __name__ == '__main__':
-    f = open('training2.txt')
+    domain_name = sys.argv[1]
+    f = open(domain_name)
 
     examples = []
 
@@ -15,7 +18,7 @@ if __name__ == '__main__':
 
     f.close()
 
-    domain = r.Domain('rubiks')
+    domain = r.Domain(domain_name)
 
     for e in examples:
         preconditions = e[0].split(',')
