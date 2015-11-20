@@ -84,7 +84,7 @@ class DomainClassTest(unittest.TestCase):
         domain = representations.Domain('blocks-world')
         domain.add_all_predicates(['(clear a)', '(clear b)', '(ontable a)',
                                    '(holding a)', '(on a b)', '(on b a)'])
-        
+
         self.assertEqual(str(domain), """(define (domain blocks-world)
     (:predicates
         (clear ?x0)

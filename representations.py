@@ -28,9 +28,9 @@ class Domain():
         for o in operators:
             action = Action.parse(o, preconditions, effects)
             existent = next((x for x in self.actions
-                             if x.action_name == action.action_name),
+                             if x.name == action.name),
                             None)
-            if existent is None:
+            if not existent:
                 self.actions.append(action)
             else:
                 existent.merge(action)
@@ -40,17 +40,12 @@ class Domain():
         """
         string = ['(define', ' ', '(domain ', self.name, ')', '\n',
                   '    ', '(:predicates', '\n        ']
-
         for p in self.predicates:
             string += [str(p), '\n        ']
-
         string += [')', '\n\n    ']
-
         for a in self.actions:
             string += [str(a), '\n\n    ']
-
         string += ')'
-
         return ''.join(string)
 
 
@@ -108,7 +103,7 @@ class Predicate():
 
 class Action():
     def __init__(self, action_name, n_args):
-        self.action_name = action_name
+        self.name = action_name
         self.n_args = n_args
         self.parameters = []
         for i in range(n_args):
@@ -116,6 +111,9 @@ class Action():
         self.preconditions = []
         self.effects_positive = []
         self.effects_negative = []
+        self.remove_precondition_list = []
+        self.remove_positive_effects_list = []
+        self.remove_negative_effects_list = []
 
     def add_precondition(self, predicate):
         self.preconditions.append(predicate.print_grounded())
@@ -129,12 +127,34 @@ class Action():
     def merge(self, action):
         """ Updates current action with new information
         """
-        self.preconditions = list(set(self.preconditions)
-                                  | set(action.preconditions))
-        self.effects_positive = list(set(self.effects_positive)
-                                     | set(action.effects_positive))
-        self.effects_negative = list(set(self.effects_negative)
-                                     | set(action.effects_negative))
+        difference = set(self.preconditions) - set(action.preconditions)
+        remove = set(self.preconditions) & difference
+        self.remove_precondition_list = set(
+            self.remove_precondition_list) | remove
+        self.preconditions = list((set(self.preconditions)
+                                   | set(action.preconditions))
+                                  - set(self.remove_precondition_list))
+
+        difference = set(self.effects_positive) - set(action.effects_positive)
+        remove = set(self.effects_positive) & difference
+        self.remove_positive_effects_list = set(
+            self.remove_positive_effects_list) | remove
+        self.effects_positive = list((set(self.effects_positive)
+                                      | set(action.effects_positive))
+                                     - set(self.remove_positive_effects_list))
+
+        difference = set(self.effects_negative) - set(action.effects_negative)
+        remove = set(self.effects_negative) & difference
+        self.remove_negative_effects_list = set(
+            self.remove_negative_effects_list) | remove
+        self.effects_negative = list((set(self.effects_negative)
+                                      | set(action.effects_negative))
+                                     - set(self.remove_negative_effects_list))
+
+        # self.effects_positive = list(set(self.effects_positive)
+        #                              | set(action.effects_positive))
+        # self.effects_negative = list(set(self.effects_negative)
+        #                              | set(action.effects_negative))
 
     @classmethod
     def parse(cls, action_name, preconditions, effects):
@@ -213,7 +233,7 @@ class Action():
 
     def __str__(self):
         """ Print the action in PDDL format """
-        string = ['(:action', ' ', self.action_name, '\n', '    ',
+        string = ['(:action', ' ', self.name, '\n', '    ',
                   ':parameters', ' ', '(']
 
         for i in range(len(self.parameters)):

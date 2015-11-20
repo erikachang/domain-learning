@@ -2,7 +2,7 @@ import pdb
 import representations as r
 
 if __name__ == '__main__':
-    f = open('training.txt')
+    f = open('training2.txt')
 
     examples = []
 
@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     f.close()
 
-    domain = r.Domain('blocksworld')
+    domain = r.Domain('rubiks')
 
     for e in examples:
         preconditions = e[0].split(',')
