@@ -3,8 +3,8 @@ import pdb
 
 class Domain():
 
-    def __init__(self, domain_name):
-        self.name = domain_name
+    def __init__(self, name):
+        self.name = name
         self.predicates = []
         self.actions = []
 
@@ -41,11 +41,13 @@ class Domain():
         string = ['(define', ' ', '(domain ', self.name, ')', '\n',
                   '    ', '(:predicates', '\n        ']
         for p in self.predicates:
-            string += [str(p), '\n        ']
-        string += [')', '\n\n    ']
+            string += [str(p)]
+            if p is not self.predicates[-1]:
+                string += ['\n        ']
+        string += [')']
         for a in self.actions:
-            string += [str(a), '\n\n    ']
-        string += ')'
+            string += ["\n\n", "    ", str(a)]
+        string += ['\n', ')']
         return ''.join(string)
 
 
@@ -124,9 +126,8 @@ class Action():
     def add_negative_effect(self, effect):
         self.effects_negative.append(effect.print_grounded())
 
-    def merge(self, action):
-        """ Updates current action with new information
-        """
+    def merge_probabilistic(self, action):
+        # The following is a version for probabilistic domains
         difference = set(self.preconditions) - set(action.preconditions)
         remove = set(self.preconditions) & difference
         self.remove_precondition_list = set(
@@ -151,10 +152,17 @@ class Action():
                                       | set(action.effects_negative))
                                      - set(self.remove_negative_effects_list))
 
-        # self.effects_positive = list(set(self.effects_positive)
-        #                              | set(action.effects_positive))
-        # self.effects_negative = list(set(self.effects_negative)
-        #                              | set(action.effects_negative))
+    def merge(self, action):
+        """ Updates current action with new information in
+            fully observable, deterministic domains.
+        """
+
+        self.preconditions = list(set(self.preconditions)
+                                  & set(action.preconditions))
+        self.effects_positive = list(set(self.effects_positive)
+                                     & set(action.effects_positive))
+        self.effects_negative = list(set(self.effects_negative)
+                                     & set(action.effects_negative))
 
     @classmethod
     def parse(cls, action_name, preconditions, effects):
@@ -245,18 +253,22 @@ class Action():
 
         for p in self.preconditions:
             string += (p)
-            string += ' '
+            if p is not self.preconditions[-1]:
+                string += ' '
 
         string += [')', '\n', '    ', ':effect', ' ', '(', 'and', ' ']
 
         for e in self.effects_positive:
             string += (e)
-            string += ' '
+            if (e is not self.effects_positive[-1]
+                    or len(self.effects_negative) > 0):
+                string += ' '
 
         for e in self.effects_negative:
             effect_negated = ['(not', ' ', e, ')']
             string += (effect_negated)
-            string += ' '
+            if e is not self.effects_negative[-1]:
+                string += ' '
 
         string += [')', ')']
 
