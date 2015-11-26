@@ -1,3 +1,4 @@
+import copy
 import pdb
 
 
@@ -116,6 +117,9 @@ class Action():
         self.remove_precondition_list = []
         self.remove_positive_effects_list = []
         self.remove_negative_effects_list = []
+        self.history_precondition = []
+        self.history_positive_effects = []
+        self.history_negative_effects = []
 
     def add_precondition(self, predicate):
         self.preconditions.append(predicate.print_grounded())
@@ -126,43 +130,40 @@ class Action():
     def add_negative_effect(self, effect):
         self.effects_negative.append(effect.print_grounded())
 
-    def merge_probabilistic(self, action):
-        # The following is a version for probabilistic domains
-        difference = set(self.preconditions) - set(action.preconditions)
-        remove = set(self.preconditions) & difference
-        self.remove_precondition_list = set(
-            self.remove_precondition_list) | remove
-        self.preconditions = list((set(self.preconditions)
-                                   | set(action.preconditions))
-                                  - set(self.remove_precondition_list))
-
-        difference = set(self.effects_positive) - set(action.effects_positive)
-        remove = set(self.effects_positive) & difference
-        self.remove_positive_effects_list = set(
-            self.remove_positive_effects_list) | remove
-        self.effects_positive = list((set(self.effects_positive)
-                                      | set(action.effects_positive))
-                                     - set(self.remove_positive_effects_list))
-
-        difference = set(self.effects_negative) - set(action.effects_negative)
-        remove = set(self.effects_negative) & difference
-        self.remove_negative_effects_list = set(
-            self.remove_negative_effects_list) | remove
-        self.effects_negative = list((set(self.effects_negative)
-                                      | set(action.effects_negative))
-                                     - set(self.remove_negative_effects_list))
-
     def merge(self, action):
-        """ Updates current action with new information in
-            fully observable, deterministic domains.
-        """
+        self.history_precondition.append(set(action.preconditions))
+        self.history_positive_effects.append(set(action.effects_positive))
+        self.history_negative_effects.append(set(action.effects_negative))
 
-        self.preconditions = list(set(self.preconditions)
-                                  & set(action.preconditions))
-        self.effects_positive = list(set(self.effects_positive)
-                                     & set(action.effects_positive))
-        self.effects_negative = list(set(self.effects_negative)
-                                     & set(action.effects_negative))
+        self.preconditions = list(set.intersection(*self.history_precondition))
+        self.effects_positive = list(set.intersection(*self.history_positive_effects))
+        self.effects_negative = list(set.intersection(*self.history_negative_effects))
+
+    # def merge(self, action):
+    #     difference = set(self.preconditions) - set(action.preconditions)
+    #     remove = set(self.preconditions) & difference
+    #     self.remove_precondition_list = set(
+    #         self.remove_precondition_list) | remove
+    #     self.preconditions = list((set(self.preconditions)
+    #                                | set(action.preconditions))
+    #                               - set(self.remove_precondition_list))
+
+    #     difference = set(self.effects_positive) - set(action.effects_positive)
+    #     remove = set(self.effects_positive) & difference
+    #     self.remove_positive_effects_list = set(
+    #         self.remove_positive_effects_list) | remove
+    #     self.effects_positive = list((set(self.effects_positive)
+    #                                   | set(action.effects_positive))
+    #                                  - set(self.remove_positive_effects_list))
+
+    #     difference = set(self.effects_negative) - set(action.effects_negative)
+    #     remove = set(self.effects_negative) & difference
+    #     self.remove_negative_effects_list = set(
+    #         self.remove_negative_effects_list) | remove
+    #     self.effects_negative = list((set(self.effects_negative)
+    #                                   | set(action.effects_negative))
+    #                                  - set(self.remove_negative_effects_list))
+
 
     @classmethod
     def parse(cls, action_name, preconditions, effects):
@@ -178,64 +179,67 @@ class Action():
 
         for p in preconditions:
             predicate = Predicate.parse_grounded(p)
+            predicate_to_add = copy.deepcopy(predicate)
             for i in range(len(predicate.terms)):
                 has_correspondence = False
                 for j in range(len(parameter_mapping)):
                     # If there is a mapping between parameter and precondition
-                    if predicate.terms[i][1] == parameter_mapping[j][0]:
+                    if (predicate.terms[i][1] == parameter_mapping[j][0]):
                         # Update precondition with parameter value
-                        predicate.terms[i][1] = parameter_mapping[j][1]
+                        predicate_to_add.terms[i][1] = parameter_mapping[j][1]
                         has_correspondence = True
                         break
-                # if not has_correspondence:
-                #     variable_index = len(parameter_mapping)
-                #     variable = '?x' + str(variable_index)
-                #     parameter_mapping.append((predicate.terms[i][1], variable))
-                #     predicate.terms[i][1] = variable
+            # if not has_correspondence:
+            #     variable_index = len(parameter_mapping)
+            #     variable = '?x' + str(variable_index)
+            #     parameter_mapping.append((predicate.terms[i][1], variable))
+            #     predicate.terms[i][1] = variable
             if has_correspondence:
-                action.add_precondition(predicate)
+                action.add_precondition(predicate_to_add)
 
         state_intersection = set(preconditions) & set(effects)
         effects_positive = list(set(effects) - state_intersection)
         effects_negative = list(set(preconditions) - state_intersection)
 
-        for ep in effects_positive:
-            predicate = Predicate.parse_grounded(ep)
+        for p in effects_positive:
+            predicate = Predicate.parse_grounded(p)
+            predicate_to_add = copy.deepcopy(predicate)
             for i in range(len(predicate.terms)):
                 has_correspondence = False
                 for j in range(len(parameter_mapping)):
                     # If there is a mapping between parameter and precondition
-                    if predicate.terms[i][1] == parameter_mapping[j][0]:
+                    if (predicate.terms[i][1] == parameter_mapping[j][0]):
                         # Update precondition with parameter value
-                        predicate.terms[i][1] = parameter_mapping[j][1]
+                        predicate_to_add.terms[i][1] = parameter_mapping[j][1]
                         has_correspondence = True
                         break
-                # if not has_correspondence:
-                #     i = len(parameter_mapping)
-                #     variable = '?x' + str(i)
-                #     parameter_mapping.append((predicate.terms[i][1], variable))
-                #     predicate.terms[i][1] = variable
+            # if not has_correspondence:
+            #     variable_index = len(parameter_mapping)
+            #     variable = '?x' + str(variable_index)
+            #     parameter_mapping.append((predicate.terms[i][1], variable))
+            #     predicate.terms[i][1] = variable
             if has_correspondence:
-                action.add_positive_effect(predicate)
+                action.add_positive_effect(predicate_to_add)
 
-        for ep in effects_negative:
-            predicate = Predicate.parse_grounded(ep)
+        for p in effects_negative:
+            predicate = Predicate.parse_grounded(p)
+            predicate_to_add = copy.deepcopy(predicate)
             for i in range(len(predicate.terms)):
                 has_correspondence = False
                 for j in range(len(parameter_mapping)):
                     # If there is a mapping between parameter and precondition
-                    if predicate.terms[i][1] == parameter_mapping[j][0]:
+                    if (predicate.terms[i][1] == parameter_mapping[j][0]):
                         # Update precondition with parameter value
-                        predicate.terms[i][1] = parameter_mapping[j][1]
+                        predicate_to_add.terms[i][1] = parameter_mapping[j][1]
                         has_correspondence = True
                         break
-                # if not has_correspondence:
-                #     i = len(parameter_mapping)
-                #     variable = '?x' + str(i)
-                #     parameter_mapping.append((predicate.terms[i][1], variable))
-                #     predicate.terms[i][1] = variable
+            # if not has_correspondence:
+            #     variable_index = len(parameter_mapping)
+            #     variable = '?x' + str(variable_index)
+            #     parameter_mapping.append((predicate.terms[i][1], variable))
+            #     predicate.terms[i][1] = variable
             if has_correspondence:
-                action.add_negative_effect(predicate)
+                action.add_negative_effect(predicate_to_add)
 
         return action
 

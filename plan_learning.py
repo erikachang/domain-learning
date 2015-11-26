@@ -3,10 +3,13 @@
 import pdb
 import planning
 import sys
+import random
 
 
 def main(args):
     verbose = '-v' in args
+    n_arg = '-n' in args
+
     try:
         i = 1 + int(verbose)
         examples_file = args[i]
@@ -25,17 +28,25 @@ def main(args):
             example = (triple[0], triple[1], triple[2])
             examples.append(example)
             line = f.readline().replace('\n', '')
-    print "Done!"
+    print "Done reading {n_examples} training examples!".format(n_examples=len(examples))
+
     if not f.closed:
         print "Warning: file stream is still open."
+
+    if n_arg:
+        n_examples = int(args[i+3])
+    else:
+        n_examples = len(examples)
 
     print "Creating domain..."
     domain = planning.Domain(domain_name)
 
-    for e in examples:
-        preconditions = e[0].split(',')
-        operators = e[1].split(',')
-        effects = e[2].split(',')
+#    random.shuffle(examples)
+
+    for i in range(n_examples):
+        preconditions = examples[i][0].split(',')
+        operators = examples[i][1].split(',')
+        effects = examples[i][2].split(',')
 
         domain.add_all_predicates(preconditions)
         domain.add_all_predicates(effects)

@@ -103,7 +103,7 @@ class DomainClassTest(unittest.TestCase):
         domain.add_all_predicates(example_effects)
         domain.add_actions([example_action], example_preconditions,
                            example_effects)
-
+        print str(domain)
         expected = """(define (domain blocksworld)
     (:predicates
         (on ?x0 ?x1)
