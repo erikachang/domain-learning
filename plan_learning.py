@@ -16,8 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program, located in the root of this repository.
 If not, see <http://www.gnu.org/licenses/>.
 """
-#!/usr/bin/python
-
 import pdb
 import planning
 import sys
@@ -36,6 +34,13 @@ def main(args):
         print "usage: {cmd} [-v] examples_file"\
             " domain_name".format(cmd=args[0])
         return
+
+    print """
+PDDL Domain Learning Copyright (C) 2016 Stephan Chang
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show c' for details.
+"""
 
     examples = []
     print "Parsing examples..."
