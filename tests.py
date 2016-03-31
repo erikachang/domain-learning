@@ -15,8 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program, located in the root of this repository.
 If not, see <http://www.gnu.org/licenses/>.
 """
-#!/usr/bin/python
-
 import unittest
 import planning as p
 
